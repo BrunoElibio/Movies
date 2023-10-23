@@ -22,11 +22,6 @@ class Filme(db.Model):
     producers = db.Column(db.String(255))
     winner = db.Column(db.String(3))
 
-# Configurar a rota para criar as tabelas no banco de dados SQLite
-@app.before_request
-def create_tables():
-    db.create_all()
-
 @app.route('/filmes', methods=['GET'])
 def obter_filmes():
     filmes = Filme.query.all()
@@ -162,11 +157,16 @@ def carregar_csv(filename):
             db.session.add(filme)
         db.session.commit()
 
+def create_tables():
+    db.create_all()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Carregar dados a partir de um arquivo CSV')
     parser.add_argument('filename', type=str, help='Nome do arquivo CSV para carregar')
     args = parser.parse_args()
 
+
     with app.app_context():
+        create_tables()
         carregar_csv(args.filename)  # Carrega o arquivo CSV especificado
         app.run(debug=True)

@@ -39,31 +39,19 @@ function Dashboard() {
     fetchMovies();
   }, []);
 
-  useEffect(()=>{
-    async function fetchMinInterval(){
+  useEffect(() => {
+    async function fetchIntervals(){
       try {
-        const response = await axios.get('http://127.0.0.1:5000/produtor/menor-intervalo');
-        setProducerWithMinInterval(response.data);
+        const response = await axios.get('http://127.0.0.1:5000/produtor/intervalos');
+        setProducerWithMinInterval(response.data.min[0]);
+        setProducerWithMaxInterval(response.data.max[0]);
         setIsLoading(false);
         }catch (error) {
-          console.error('Erro ao buscar dadps:', error);
+          console.error('Erro ao buscar dados:', error);
         }
       }
-      fetchMinInterval();
+      fetchIntervals();
     }, []);
-
-    useEffect(()=>{
-      async function fetchMaxInterval(){
-        try {
-          const response = await axios.get('http://127.0.0.1:5000/produtor/maior-intervalo');
-          setProducerWithMaxInterval(response.data);
-          setIsLoading(false);
-          }catch (error) {
-            console.error('Erro ao buscar dadps:', error);
-          }
-        }
-        fetchMaxInterval();
-      }, []);
 
   useEffect(() => {
     // Lógica para calcular os dados dos painéis a partir da lista de filmes
@@ -89,8 +77,6 @@ function Dashboard() {
       const sortedStudios = Object.entries(studioWins)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3);
-
-      // Lógica para calcular produtores com maior e menor intervalo
 
       // Atualizar os estados dos painéis
       setYearsMultipleWinners(

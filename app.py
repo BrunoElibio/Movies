@@ -37,83 +37,6 @@ def obter_filmes():
     ]
     return jsonify(filmes_list)
 
-@app.route('/produtor/intervalos-todos', methods=['GET'])
-def intervalo_todos():
-    produtores = defaultdict(list)
-
-    filmes = Filme.query.order_by(Filme.producers).all()
-    for filme in filmes:
-        produtores[filme.producers].append(filme.year)
-
-    for produtor, anos in produtores.items():
-        anos_ordenados = sorted(anos)
-
-        if len(anos_ordenados) > 0:
-            intervalo = anos_ordenados[0] - anos_ordenados[-1]
-        else:
-            intervalo = None
-
-    intervalos = {}
-    return jsonify({
-        "intervalos": [
-            {
-                "producer": produtor,
-                "interval": intervalo,
-                "previousWin": intervalo[0] - 1,
-                "followingWin": intervalo[-1] + 1
-            }
-            for produtor, intervalo in intervalos.items()
-        ]
-    })
-
-@app.route('/produtor/intervalos', methods=['GET'])
-def produtor_intervalos():
-    produtores = defaultdict(list)
-
-    filmes = Filme.query.order_by(Filme.producers).all()
-    for filme in filmes:
-        produtores[filme.producers].append(filme.year)
-
-    intervalos = {}
-    for produtor, anos in produtores.items():
-        anos_ordenados = sorted(anos)
-        intervalos[produtor] = calcular_intervalo_consecutivo(anos_ordenados)
-
-    max_intervalo = None
-    min_intervalo = None
-
-    for produtor, intervalo in intervalos.items():
-        if len(intervalo) > 1:
-            if max_intervalo is None or intervalo[-1] > max_intervalo:
-                max_intervalo = intervalo[-1]
-
-            if min_intervalo is None or intervalo[0] < min_intervalo:
-                min_intervalo = intervalo[0]
-
-    min_intervalos = []
-    for produtor, intervalo in intervalos.items():
-        if len(intervalo) > 1 and intervalo[0] == min_intervalo:
-            min_intervalos.append({
-                "producer": produtor,
-                "interval": intervalo[0],
-                "previousWin": intervalo[0] - 1,
-                "followingWin": intervalo[0] + 1
-            })
-
-    max_intervalos = []
-    for produtor, intervalo in intervalos.items():
-        if len(intervalo) > 1 and intervalo[-1] == max_intervalo:
-            max_intervalos.append({
-                "producer": produtor,
-                "interval": intervalo[-1],
-                "previousWin": intervalo[-1] - 1,
-                "followingWin": intervalo[-1] + 1
-            })
-
-    return jsonify({
-        "min": min_intervalos,
-        "max": max_intervalos
-    })
 
 @app.route('/produtor/menor-intervalo', methods=['GET'])
 def produtor_menor_intervalo():
@@ -211,11 +134,75 @@ def vencedores():
 
     return jsonify(winners_data)
 
-def calcular_intervalo_consecutivo(prizes):
+@app.route('/produtor/intervalos', methods=['GET'])
+def produtor_intervalos():
+    produtores = defaultdict(list)
+
+    filmes = Filme.query.order_by(Filme.producers).all()
+    for filme in filmes:
+        produtores[filme.producers].append(filme.year)
+
+    menor_intervalo = None
+    produtor_menor_intervalo = None
+    anos_menor_intervalo = None
+
+    maior_intervalo = None
+    produtor_maior_intervalo = None
+    ano_inicial_maior_intervalo = None
+    ano_final_maior_intervalo = None
+
+    for produtor, anos in produtores.items():
+        anos_ordenados = sorted(anos)
+        intervalos = calcular_intervalo_consecutivo(anos_ordenados)
+
+        if len(intervalos) > 1:
+            # Atualize as informações do menor intervalo
+            min_intervalo = min(intervalos)
+
+            if menor_intervalo is None or min_intervalo < menor_intervalo:
+                menor_intervalo = min_intervalo
+                produtor_menor_intervalo = produtor
+                # Obter os anos referentes ao menor intervalo
+                anos_menor_intervalo = [anos_ordenados[i:i+2] for i in range(len(anos_ordenados) - 1) if anos_ordenados[i+1] - anos_ordenados[i] == min_intervalo]
+
+            # Atualize as informações do maior intervalo
+            max_intervalo = max(intervalos)
+
+            if maior_intervalo is None or max_intervalo > maior_intervalo:
+                maior_intervalo = max_intervalo
+                produtor_maior_intervalo = produtor
+                # Encontre os anos correspondentes ao maior intervalo
+                index_max_intervalo = intervalos.index(max_intervalo)
+                ano_inicial_maior_intervalo = anos_ordenados[index_max_intervalo]
+                ano_final_maior_intervalo = anos_ordenados[index_max_intervalo + 1]
+
+    return jsonify({
+        "min": [
+            {
+                "produtor_menor_intervalo": produtor_menor_intervalo,
+                "menor_intervalo": menor_intervalo,
+                "ano_inicial": anos_menor_intervalo[0][0],
+                "ano_final": anos_menor_intervalo[0][1]
+            }
+        ],
+        "max": [
+            {
+                "produtor_maior_intervalo": produtor_maior_intervalo,
+                "maior_intervalo": maior_intervalo,
+                "ano_inicial_maior_intervalo": ano_inicial_maior_intervalo,
+                "ano_final_maior_intervalo": ano_final_maior_intervalo
+            }
+        ]
+    })
+
+
+def calcular_intervalo_consecutivo(anos):
     intervalos = []
-    for i in range(1, len(prizes)):
-        intervalo = prizes[i] - prizes[i - 1]
+
+    for i in range(len(anos) - 1):
+        intervalo = anos[i + 1] - anos[i]
         intervalos.append(intervalo)
+
     return intervalos
 
 # Configurar a função para carregar o CSV com base no argumento do nome do arquivo
@@ -235,6 +222,74 @@ def carregar_csv(filename):
 
 def create_tables():
     db.create_all()
+
+def produtor_intervalos():
+    produtores = defaultdict(list)
+
+    filmes = Filme.query.order_by(Filme.producers).all()
+    for filme in filmes:
+        produtores[filme.producers].append(filme.year)
+
+def produtor_intervalos():
+    produtores = defaultdict(list)
+
+    filmes = Filme.query.order_by(Filme.producers).all()
+    for filme in filmes:
+        produtores[filme.producers].append(filme.year)
+
+    menor_intervalo = None
+    produtor_menor_intervalo = None
+    anos_menor_intervalo = None
+
+    maior_intervalo = None
+    produtor_maior_intervalo = None
+    ano_inicial_maior_intervalo = None
+    ano_final_maior_intervalo = None
+
+    for produtor, anos in produtores.items():
+        anos_ordenados = sorted(anos)
+        intervalos = calcular_intervalo_consecutivo(anos_ordenados)
+
+        if len(intervalos) > 1:
+            # Atualize as informações do menor intervalo
+            min_intervalo = min(intervalos)
+
+            if menor_intervalo is None or min_intervalo < menor_intervalo:
+                menor_intervalo = min_intervalo
+                produtor_menor_intervalo = produtor
+                # Obter os anos referentes ao menor intervalo
+                anos_menor_intervalo = [anos_ordenados[i:i+2] for i in range(len(anos_ordenados) - 1) if anos_ordenados[i+1] - anos_ordenados[i] == min_intervalo]
+
+            # Atualize as informações do maior intervalo
+            max_intervalo = max(intervalos)
+
+            if maior_intervalo is None or max_intervalo > maior_intervalo:
+                maior_intervalo = max_intervalo
+                produtor_maior_intervalo = produtor
+                # Encontre os anos correspondentes ao maior intervalo
+                index_max_intervalo = intervalos.index(max_intervalo)
+                ano_inicial_maior_intervalo = anos_ordenados[index_max_intervalo]
+                ano_final_maior_intervalo = anos_ordenados[index_max_intervalo + 1]
+
+    return jsonify({
+        "min": [
+            {
+                "produtor": produtor_menor_intervalo,
+                "intervalo": menor_intervalo,
+                "ano_inicial": anos_menor_intervalo[0][0],
+                "ano_final": anos_menor_intervalo[0][1]
+            }
+        ],
+        "max": [
+            {
+                "produtor": produtor_maior_intervalo,
+                "intervalo": maior_intervalo,
+                "ano_inicial": ano_inicial_maior_intervalo,
+                "ano_final": ano_final_maior_intervalo
+            }
+        ]
+    })
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Carregar dados a partir de um arquivo CSV')

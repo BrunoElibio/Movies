@@ -37,7 +37,6 @@ def obter_filmes():
     ]
     return jsonify(filmes_list)
 
-
 @app.route('/produtor/menor-intervalo', methods=['GET'])
 def produtor_menor_intervalo():
     produtores = defaultdict(list)
@@ -193,6 +192,34 @@ def produtor_intervalos():
                 "ano_final_maior_intervalo": ano_final_maior_intervalo
             }
         ]
+    })
+
+@app.route('/produtor/todos-intervalos', methods=['GET'])
+def produtor_todos_intervalos():
+    produtores = defaultdict(list)
+
+    filmes = Filme.query.order_by(Filme.producers).all()
+    for filme in filmes:
+        produtores[filme.producers].append(filme.year)
+
+    for produtor, anos in produtores.items():
+        anos_ordenados = sorted(anos)
+        intervalos = calcular_intervalo_consecutivo(anos_ordenados)
+
+        for intervalo in intervalos:
+            # Obter os anos referentes ao intervalo
+            anos_intervalo = [anos_ordenados[i:i+2] for i in range(len(anos_ordenados) - 1) if anos_ordenados[i+1] - anos_ordenados[i] == intervalo]
+
+            # Adicionar o produtor e o intervalo ao array de produtores
+            for ano_inicial, ano_final in anos_intervalo:
+                produtores[produtor].append({
+                    "intervalo": intervalo,
+                    "ano_inicial": ano_inicial,
+                    "ano_final": ano_final
+                })
+
+    return jsonify({
+        "produtores": produtores
     })
 
 

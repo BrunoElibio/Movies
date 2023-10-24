@@ -37,6 +37,14 @@ npm install
 npm start
 ```
 
+* Rota adicionada para buscar a lista de produtores e toda a lista de vitórias
+
+```
+http://127.0.0.1:5000/produtor/todos-intervalos
+
+```
+
+
 ## Author
 
 Bruno Correa Elibio

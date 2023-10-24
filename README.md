@@ -21,6 +21,10 @@ API em Flask realizada para carregamento de uma lista de filmes via arquivo CSV 
 python .\app.py .\movielist.csv
 
 ```
+
+* Após iniciar a API, ela pode ser acessada através do endereço ** http://127.0.0.1:5000 **
+
+
 * Na pasta movies dashboard se encontra o frontend em React, para que seja possível rodar é necessário fazer a instalação dos pacotes;
   
 ```

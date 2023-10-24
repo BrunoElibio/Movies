@@ -150,7 +150,7 @@ def carregar_csv(filename):
         next(reader)  # Pular cabeçalho
         for row in reader:
             year, title, studios, producers, winner = row
-            print(f'Filme: {title}, Ano: {year}, Estudio: {studios}, Produtor: {producers}, Vencedor: {winner}')
+            #print(f'Filme: {title}, Ano: {year}, Estudio: {studios}, Produtor: {producers}, Vencedor: {winner}')
             if winner == '':
                 winner = 'no'
             filme = Filme(year=year, title=title, studios=studios, producers=producers, winner=winner)
@@ -169,4 +169,4 @@ if __name__ == '__main__':
     with app.app_context():
         create_tables()
         carregar_csv(args.filename)  # Carrega o arquivo CSV especificado
-        app.run(debug=True)
+        app.run(host='127.0.0.1', port='5000')

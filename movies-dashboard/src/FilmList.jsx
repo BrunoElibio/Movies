@@ -7,7 +7,6 @@ function FilmList() {
     const rowsPage = 10;
 
     useEffect(() => {
-        // Realize a solicitação GET à sua API
         fetch('http://127.0.0.1:5000/filmes')
           .then((response) => response.json())
           .then((data) => setFilms(data))

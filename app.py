@@ -37,6 +37,84 @@ def obter_filmes():
     ]
     return jsonify(filmes_list)
 
+@app.route('/produtor/intervalos-todos', methods=['GET'])
+def intervalo_todos():
+    produtores = defaultdict(list)
+
+    filmes = Filme.query.order_by(Filme.producers).all()
+    for filme in filmes:
+        produtores[filme.producers].append(filme.year)
+
+    for produtor, anos in produtores.items():
+        anos_ordenados = sorted(anos)
+
+        if len(anos_ordenados) > 0:
+            intervalo = anos_ordenados[0] - anos_ordenados[-1]
+        else:
+            intervalo = None
+
+    intervalos = {}
+    return jsonify({
+        "intervalos": [
+            {
+                "producer": produtor,
+                "interval": intervalo,
+                "previousWin": intervalo[0] - 1,
+                "followingWin": intervalo[-1] + 1
+            }
+            for produtor, intervalo in intervalos.items()
+        ]
+    })
+
+@app.route('/produtor/intervalos', methods=['GET'])
+def produtor_intervalos():
+    produtores = defaultdict(list)
+
+    filmes = Filme.query.order_by(Filme.producers).all()
+    for filme in filmes:
+        produtores[filme.producers].append(filme.year)
+
+    intervalos = {}
+    for produtor, anos in produtores.items():
+        anos_ordenados = sorted(anos)
+        intervalos[produtor] = calcular_intervalo_consecutivo(anos_ordenados)
+
+    max_intervalo = None
+    min_intervalo = None
+
+    for produtor, intervalo in intervalos.items():
+        if len(intervalo) > 1:
+            if max_intervalo is None or intervalo[-1] > max_intervalo:
+                max_intervalo = intervalo[-1]
+
+            if min_intervalo is None or intervalo[0] < min_intervalo:
+                min_intervalo = intervalo[0]
+
+    min_intervalos = []
+    for produtor, intervalo in intervalos.items():
+        if len(intervalo) > 1 and intervalo[0] == min_intervalo:
+            min_intervalos.append({
+                "producer": produtor,
+                "interval": intervalo[0],
+                "previousWin": intervalo[0] - 1,
+                "followingWin": intervalo[0] + 1
+            })
+
+    max_intervalos = []
+    for produtor, intervalo in intervalos.items():
+        if len(intervalo) > 1 and intervalo[-1] == max_intervalo:
+            max_intervalos.append({
+                "producer": produtor,
+                "interval": intervalo[-1],
+                "previousWin": intervalo[-1] - 1,
+                "followingWin": intervalo[-1] + 1
+            })
+
+    return jsonify({
+        "min": min_intervalos,
+        "max": max_intervalos
+    })
+
 @app.route('/produtor/menor-intervalo', methods=['GET'])
 def produtor_menor_intervalo():
     produtores = defaultdict(list)
@@ -73,7 +151,6 @@ def produtor_menor_intervalo():
         })
     else:
         return jsonify({"message": "Nenhum produtor com mais de um prêmio consecutivo encontrado."})
-
 
 @app.route('/produtor/maior-intervalo', methods=['GET'])
 def produtor_maior_intervalo():
@@ -133,7 +210,6 @@ def vencedores():
         })
 
     return jsonify(winners_data)
-
 
 def calcular_intervalo_consecutivo(prizes):
     intervalos = []
